@@ -5,19 +5,31 @@ import PackageDescription
 
 let package = Package(
     name: "MidnightLabsKit",
+    platforms: [
+      .iOS(.v14),
+    ],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "MidnightLabsKit",
-            targets: ["MidnightLabsKit"]),
+            targets: ["MidnightLabsKit"]
+        )
+    ],
+    dependencies: [
+        .package(url: "https://github.com/pointfreeco/swift-dependencies", .upToNextMajor(from: "1.1.3")),
+        .package(url: "https://github.com/RevenueCat/purchases-ios", .upToNextMajor(from: "4.31.2"))
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "MidnightLabsKit"),
+            name: "MidnightLabsKit",
+            dependencies: [
+                .product(name: "RevenueCat", package: "purchases-ios"),
+                .product(name: "Dependencies", package: "swift-dependencies"),
+                .product(name: "DependenciesMacros", package: "swift-dependencies")
+            ]
+        ),
         .testTarget(
             name: "MidnightLabsKitTests",
-            dependencies: ["MidnightLabsKit"]),
+            dependencies: ["MidnightLabsKit"]
+        ),
     ]
 )
