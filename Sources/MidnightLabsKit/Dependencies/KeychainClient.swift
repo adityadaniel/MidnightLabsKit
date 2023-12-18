@@ -7,12 +7,8 @@ public struct KeychainClient {
   public var get: (String) -> String?
   public var delete: (String) -> Void
   
-  internal static let service = "iAP"
-  internal static let account = "Snapped"
-  
-  public enum Keys {
-    public static let subscriptions = "subs"
-  }
+  internal static let service = "MidnightLabsKit" // TODO: Add service name e.g: iAP
+  internal static let account = "MLKKeychain" // TODO: add account name e.g: Snapped
   
   static let logger = Logger(subsystem: "Keychain", category: "KeychainClient")
 }

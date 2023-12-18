@@ -5,7 +5,7 @@ import DependenciesMacros
 
 @DependencyClient
 public struct RevenueClient {
-    public var initialize: () -> Void
+    public var initialize: (_ apiKey: String) -> Void
     public var getOfferings: () async throws -> Offerings
     public var purchase: (Package) async throws -> StoreTransaction
     public var restorePurchase: () async throws -> CustomerInfo
@@ -13,9 +13,9 @@ public struct RevenueClient {
 
 extension RevenueClient: DependencyKey {
   public static let liveValue: RevenueClient = RevenueClient(
-    initialize: {
+    initialize: { apiKey in
       Purchases.logLevel = .debug
-      Purchases.configure(withAPIKey: "appl_JrZtHWUrBMlHyOtBdXCoKFIbiDE")
+      Purchases.configure(withAPIKey: apiKey)
     },
     getOfferings: {
       try await Purchases.shared.offerings()
