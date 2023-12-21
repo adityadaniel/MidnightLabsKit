@@ -10,6 +10,12 @@ public struct KeychainClient {
         let account: KeychainClient.Account
         let service: KeychainClient.Service
         let data: Data
+        
+        public init(account: KeychainClient.Account, service: KeychainClient.Service, data: Data) {
+            self.account = account
+            self.service = service
+            self.data = data
+        }
     }
     
     public var add: (KeychainClient.Payload) -> Void
