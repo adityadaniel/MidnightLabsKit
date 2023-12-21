@@ -3,82 +3,88 @@ import OSLog
 import Dependencies
 
 public struct KeychainClient {
-  public var add: (String) -> Void
-  public var get: (String) -> String?
-  public var delete: (String) -> Void
-  
-  internal static let service = "iAP"
-  internal static let account = "Snapped"
-  
-  public enum Keys {
-    public static let subscriptions = "subs"
-  }
-  
-  static let logger = Logger(subsystem: "Keychain", category: "KeychainClient")
+    public typealias Account = String
+    public typealias Service = String
+    
+    public struct Payload {
+        let account: KeychainClient.Account
+        let service: KeychainClient.Service
+        let data: Data
+    }
+    
+    public var add: (KeychainClient.Payload) -> Void
+    public var get: (KeychainClient.Payload) -> Data?
+    public var delete: (KeychainClient.Payload) -> Void
+    
+    internal static let logger = Logger(subsystem: "Keychain", category: "KeychainClient")
+    
+    public static func decode<T: Decodable>(data: Data, as type: T.Type) -> T? {
+        return try? JSONDecoder().decode(type, from: data)
+    }
+    
+    public static func encode<T: Encodable>(type: T) -> Data? {
+        return try? JSONEncoder().encode(type)
+    }
 }
 
 extension KeychainClient: DependencyKey {
     public static let liveValue: KeychainClient = KeychainClient(
-    add: { key in
-      guard let data = try? JSONEncoder().encode(key) else {
-        KeychainClient.logger.log(level: .debug, "Cannot encode")
-        return
-      }
-      let query = [
-        kSecClass: kSecClassGenericPassword,
-        kSecAttrAccount: KeychainClient.account,
-        kSecAttrService: KeychainClient.service,
-        kSecValueData: data
-      ] as CFDictionary
-      
-      let status = SecItemAdd(query, nil)
-      
-      if status == errSecDuplicateItem {
-        // Item already exist, thus update it.
-        let query = [
-          kSecAttrService: KeychainClient.service,
-          kSecAttrAccount: KeychainClient.account,
-          kSecClass: kSecClassGenericPassword,
-        ] as CFDictionary
-        
-        let attributesToUpdate = [kSecValueData: data] as CFDictionary
-        
-        // Update existing item
-        SecItemUpdate(query, attributesToUpdate)
-      }
-    },
-    get: { key in
-      let query = [
-        kSecClass: kSecClassGenericPassword,
-        kSecAttrAccount: KeychainClient.account,
-        kSecAttrService: KeychainClient.service,
-        kSecReturnData: true
-      ] as CFDictionary
-      
-      var result: AnyObject?
-      let status = SecItemCopyMatching(query, &result)
-      
-      guard status == errSecSuccess else { return nil }
-      guard let data = result as? Data else { return nil }
-      return try? JSONDecoder().decode(String.self, from: data)
-    },
-    delete: { key in
-      let query = [
-        kSecClass: kSecClassGenericPassword,
-        kSecAttrAccount: KeychainClient.account,
-        kSecAttrService: KeychainClient.service,
-        kSecReturnData: true
-      ] as CFDictionary
-      
-      SecItemDelete(query)
-    }
-  )
+        add: { payload in
+            let query = [
+                kSecClass: kSecClassGenericPassword,
+                kSecAttrAccount: payload.account,
+                kSecAttrService: payload.service,
+                kSecValueData: payload.data
+            ] as CFDictionary
+            
+            let status = SecItemAdd(query, nil)
+            
+            if status == errSecDuplicateItem {
+                // Item already exist, thus update it.
+                let query = [
+                    kSecAttrAccount: payload.account,
+                    kSecAttrService: payload.service,
+                    kSecClass: kSecClassGenericPassword,
+                ] as CFDictionary
+                
+                let attributesToUpdate = [kSecValueData: payload.data] as CFDictionary
+                
+                // Update existing item
+                SecItemUpdate(query, attributesToUpdate)
+            }
+        },
+        get: { payload in
+            let query = [
+                kSecClass: kSecClassGenericPassword,
+                kSecAttrAccount: payload.account,
+                kSecAttrService: payload.service,
+                kSecReturnData: true
+            ] as CFDictionary
+            
+            var result: AnyObject?
+            let status = SecItemCopyMatching(query, &result)
+            
+            guard status == errSecSuccess else { return nil }
+            guard let data = result as? Data else { return nil }
+            return data
+        },
+        delete: { payload in
+            let query = [
+                kSecClass: kSecClassGenericPassword,
+                kSecAttrAccount: payload.account,
+                kSecAttrService: payload.service,
+                kSecReturnData: true
+            ] as CFDictionary
+            
+            SecItemDelete(query)
+        }
+    )
 }
 
 
 extension DependencyValues {
-  public var keychainClient: KeychainClient {
-    get { self[KeychainClient.self] }
-    set { self[KeychainClient.self] = newValue }
-  }
+    public var keychainClient: KeychainClient {
+        get { self[KeychainClient.self] }
+        set { self[KeychainClient.self] = newValue }
+    }
 }
