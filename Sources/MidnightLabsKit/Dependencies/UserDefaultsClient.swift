@@ -19,6 +19,28 @@ public struct UserDefaultsClient {
     public var setData: @Sendable (Data?, String) async -> Void
     public var setDouble: @Sendable (Double, String) async -> Void
     public var setInteger: @Sendable (Int, String) async -> Void
+    
+    public init(
+        boolForKey: @escaping (String) -> Bool,
+        dataForKey: @escaping (String) -> Data?,
+        doubleForKey: @escaping (String) -> Double,
+        integerForKey: @escaping (String) -> Int,
+        remove: @escaping (String) -> Void,
+        setBool: @escaping (Bool, String) -> Void,
+        setData: @escaping (Data?, String) -> Void,
+        setDouble: @escaping (Double, String) -> Void,
+        setInteger: @escaping (Int, String) -> Void
+    ) {
+        self.boolForKey = boolForKey
+        self.dataForKey = dataForKey
+        self.doubleForKey = doubleForKey
+        self.integerForKey = integerForKey
+        self.remove = remove
+        self.setBool = setBool
+        self.setData = setData
+        self.setDouble = setDouble
+        self.setInteger = setInteger
+    }
 }
 
 extension UserDefaultsClient: TestDependencyKey {
